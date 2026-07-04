@@ -10,7 +10,7 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 #endif
 
-namespace Eruru.VRChat.Editor {
+namespace Eruru.VRChat.AnimationReferenceSearcher {
 
 	public class AnimationReferenceSearcher : EditorWindow {
 

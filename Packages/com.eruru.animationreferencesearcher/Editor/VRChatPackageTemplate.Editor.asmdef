@@ -1,5 +1,5 @@
 {
-    "name": "VRChatPackageTemplate.Editor",
+    "name": "Eruru.AnimationReferenceSearcher.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"

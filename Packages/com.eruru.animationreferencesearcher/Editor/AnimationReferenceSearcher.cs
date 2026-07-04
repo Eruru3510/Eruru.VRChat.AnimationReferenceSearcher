@@ -29,6 +29,8 @@ namespace Eruru.VRChat.Editor {
 		static GUIStyle SelectableLabelStyle;
 		static readonly GUILayoutOption SingleLineHeight = GUILayout.Height (EditorGUIUtility.singleLineHeight);
 		static readonly RegexOptions RegexOptions = RegexOptions.IgnoreCase | RegexOptions.Compiled;
+		static readonly Dictionary<string, Vector2> TextSizes = new ();
+		static readonly Dictionary<string, GUILayoutOption> TextWidthGUIOptions = new ();
 
 #if VRC_SDK_VRCSDK3
 		VRCAvatarDescriptor VRCAvatarDescriptor;
@@ -40,14 +42,13 @@ namespace Eruru.VRChat.Editor {
 		Vector2 Scroll;
 		readonly Stack<string> PathNodes = new ();
 		readonly Dictionary<string, Result> PathResults = new ();
-		readonly Dictionary<string, Vector2> TextSizes = new ();
 		AnimatorController CurrentController;
 		AnimatorControllerLayer CurrentLayer;
 		HashSet<AnimationClip> CurrentClips;
 
 		[MenuItem ("Tools/Eruru/" + Name)]
 		static void Open () {
-			GetWindow<AnimationReferenceSearcher> (NameGUIContent.text);
+			GetWindow<AnimationReferenceSearcher> (NameGUIContent.text).OnShow ();
 		}
 
 		Vector2 GetTextSize (string text, GUIStyle style) {
@@ -58,8 +59,16 @@ namespace Eruru.VRChat.Editor {
 			return size;
 		}
 
+		Vector2 GetLabelSize (string text) {
+			return GetTextSize (text, GUI.skin.label);
+		}
+
 		GUILayoutOption GetTextGUIWidth (string text, GUIStyle style, float margin = 0) {
-			return GUILayout.Width (GetTextSize (text, style).x + margin);
+			if (!TextWidthGUIOptions.TryGetValue (text, out var guiOption)) {
+				guiOption = GUILayout.Width (GetTextSize (text, style).x + margin);
+				TextWidthGUIOptions.Add (text, guiOption);
+			}
+			return guiOption;
 		}
 
 		GUILayoutOption GetLabelGUIWidth (string text) {
@@ -72,6 +81,12 @@ namespace Eruru.VRChat.Editor {
 
 		GUILayoutOption GetButtonGUIWidth (string text) {
 			return GetTextGUIWidth (text, GUI.skin.button);
+		}
+
+		void OnShow () {
+#if VRC_SDK_VRCSDK3
+			VRCAvatarDescriptor = FindObjectOfType<VRCAvatarDescriptor> (false);
+#endif
 		}
 
 		void OnGUI () {
@@ -93,9 +108,6 @@ namespace Eruru.VRChat.Editor {
 				titleContent = NameGUIContent;
 				FoldoutStyle = new (EditorStyles.foldout) { fixedWidth = GetTextSize (string.Empty, EditorStyles.foldout).x };
 				SelectableLabelStyle = new (GUI.skin.textField);
-#if VRC_SDK_VRCSDK3
-				VRCAvatarDescriptor = FindObjectOfType<VRCAvatarDescriptor> (false);
-#endif
 			}
 			EditorGUILayout.BeginHorizontal ();
 			EditorGUILayout.LabelField (AvatarGUIContent, GetLabelGUIWidth (AvatarGUIContent.text));
@@ -118,9 +130,12 @@ namespace Eruru.VRChat.Editor {
 			}
 			EditorGUILayout.EndHorizontal ();
 
-			Scroll = EditorGUILayout.BeginScrollView (Scroll, GUILayout.ExpandHeight (true));
+			Scroll = EditorGUILayout.BeginScrollView (Scroll);
+			var index = -1;
 			foreach (var pathResult in PathResults) {
-				EditorGUILayout.BeginHorizontal (EditorStyles.helpBox);
+				index++;
+				EditorGUILayout.BeginVertical (EditorStyles.helpBox);
+				EditorGUILayout.BeginHorizontal ();
 				pathResult.Value.IsExpanded = EditorGUILayout.Foldout (pathResult.Value.IsExpanded, PathGUIContent, true, FoldoutStyle);
 				EditorGUILayout.SelectableLabel (
 					pathResult.Key,
@@ -134,11 +149,13 @@ namespace Eruru.VRChat.Editor {
 				);
 				EditorGUILayout.EndHorizontal ();
 				if (!pathResult.Value.IsExpanded) {
+					EditorGUILayout.EndVertical ();
 					continue;
 				}
 				foreach (var item in pathResult.Value.Items) {
 					EditorGUILayout.BeginVertical (EditorStyles.helpBox);
 					EditorGUILayout.BeginHorizontal ();
+					GUILayout.Space (GetLabelSize (PathGUIContent.text).x);
 					EditorGUILayout.LabelField (ControllerGUIContent, GetLabelGUIWidth (ControllerGUIContent.text), SingleLineHeight);
 					EditorGUI.BeginDisabledGroup (true);
 					EditorGUILayout.ObjectField (item.Controller, typeof (AnimatorController), true);
@@ -152,6 +169,7 @@ namespace Eruru.VRChat.Editor {
 					EditorGUILayout.EndHorizontal ();
 
 					EditorGUILayout.BeginHorizontal ();
+					GUILayout.Space (GetLabelSize (PathGUIContent.text).x);
 					EditorGUILayout.LabelField (NodePathGUIContent, GetLabelGUIWidth (NodePathGUIContent.text), SingleLineHeight);
 					EditorGUILayout.SelectableLabel (
 						item.NodePath,
@@ -165,6 +183,7 @@ namespace Eruru.VRChat.Editor {
 					EditorGUILayout.EndHorizontal ();
 
 					EditorGUILayout.BeginHorizontal ();
+					GUILayout.Space (GetLabelSize (PathGUIContent.text).x);
 					EditorGUILayout.LabelField (PropertyGUIContent, GetLabelGUIWidth (PropertyGUIContent.text), SingleLineHeight);
 					EditorGUILayout.SelectableLabel (
 						item.PropertyName,
@@ -173,6 +192,7 @@ namespace Eruru.VRChat.Editor {
 					EditorGUILayout.EndHorizontal ();
 					EditorGUILayout.EndVertical ();
 				}
+				EditorGUILayout.EndVertical ();
 			}
 			EditorGUILayout.EndScrollView ();
 		}
@@ -203,13 +223,13 @@ namespace Eruru.VRChat.Editor {
 					CurrentLayer = layer;
 					SearchStateMachine (layer.stateMachine);
 				}
-				if (CurrentClips.Count > 0) {
+				if (CurrentClips.Count != 0) {
 					var foundClipCount = CurrentController.animationClips.Length - CurrentClips.Count;
 					var path = AssetDatabase.GetAssetPath (CurrentController);
 					var count = CurrentController.animationClips.Length;
 					EditorUtility.DisplayDialog (
 						"Error",
-						$"Found Clip Count: {foundClipCount} < {nameof (AnimatorController)}: '{path}' Clip Count: {count}",
+						$"Found Clip Count: {foundClipCount} != {nameof (AnimatorController)}: '{path}' Clip Count: {count}",
 						"OK"
 					);
 				}
@@ -240,7 +260,9 @@ namespace Eruru.VRChat.Editor {
 
 		void SearchStateMachine (AnimatorStateMachine stateMachine) {
 			foreach (var state in stateMachine.states) {
+				PathNodes.Push (state.state.name);
 				SearchState (state.state.motion);
+				PathNodes.Pop ();
 			}
 			foreach (var childStateMachine in stateMachine.stateMachines) {
 				PathNodes.Push (childStateMachine.stateMachine.name);

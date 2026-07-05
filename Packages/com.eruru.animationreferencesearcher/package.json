@@ -1,11 +1,11 @@
 {
-  "name": "com.eruru.animationreferencesearcher",
-  "displayName": "Eruru Animation Reference Searcher",
-  "version": "0.0.3",
-  "unity": "2022.3",
-  "description": "Menu Tools/Eruru/Animation Reference Searcher",
-  "vrchatVersion": "2022.1.1",
-  "author": {
-    "name": "Eruru"
-  }
+	"name": "com.eruru.animationreferencesearcher",
+	"displayName": "Eruru Animation Reference Searcher",
+	"version": "0.0.3",
+	"unity": "2022.3",
+	"description": "Menu Tools\/Eruru\/Animation Reference Searcher",
+	"vrchatVersion": "2022.1.1",
+	"author": {
+		"name": "Eruru"
+	}
 }

@@ -19,7 +19,7 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 		static readonly GUIContent AvatarGUIContent = new ("Avatar");
 		static readonly GUIContent PathGUIContent = new ("Path");
 		static readonly GUIContent PropertyGUIContent = new ("Property");
-		static readonly GUIContent SearchGUIContent = new ("Search");
+		static readonly GUIContent SearchGUIContent = new ("Search(Regex)");
 		static readonly GUIContent CountGUIContent = new ("Count");
 		static readonly GUIContent ControllerGUIContent = new ("Controller");
 		static readonly GUIContent LayerGUIContent = new ("Layer");
@@ -97,7 +97,7 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 						AvatarGUIContent.text = "模型";
 						PathGUIContent.text = "路径";
 						PropertyGUIContent.text = "属性";
-						SearchGUIContent.text = "搜索";
+						SearchGUIContent.text = "搜索(正则)";
 						CountGUIContent.text = "数量";
 						ControllerGUIContent.text = "控制器";
 						LayerGUIContent.text = "层";

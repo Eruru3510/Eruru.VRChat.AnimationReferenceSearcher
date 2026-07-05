@@ -117,7 +117,7 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 						break;
 				}
 				titleContent = NameGUIContent;
-				FoldoutStyle = new (EditorStyles.foldout);
+				FoldoutStyle = new (EditorStyles.foldout) { fixedWidth = GetTextSize (PathGUIContent.text, EditorStyles.foldout).x };
 				SelectableLabelStyle = new (GUI.skin.textField);
 			}
 			EditorGUILayout.BeginHorizontal ();

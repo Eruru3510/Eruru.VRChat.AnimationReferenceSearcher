@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 #if VRC_SDK_VRCSDK3
 using VRC.SDK3.Avatars.Components;
 #endif
@@ -86,7 +88,16 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 		void OnShow () {
 #if VRC_SDK_VRCSDK3
 			VRCAvatarDescriptor = FindObjectOfType<VRCAvatarDescriptor> (false);
+			EditorSceneManager.activeSceneChangedInEditMode += EditorSceneManager_ActiveSceneChangedInEditMode;
 #endif
+		}
+
+		void EditorSceneManager_ActiveSceneChangedInEditMode (Scene current, Scene next) {
+			VRCAvatarDescriptor = FindObjectOfType<VRCAvatarDescriptor> (false);
+		}
+
+		void OnDestroy () {
+			EditorSceneManager.activeSceneChangedInEditMode -= EditorSceneManager_ActiveSceneChangedInEditMode;
 		}
 
 		void OnGUI () {
@@ -106,7 +117,7 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 						break;
 				}
 				titleContent = NameGUIContent;
-				FoldoutStyle = new (EditorStyles.foldout) { fixedWidth = GetTextSize (string.Empty, EditorStyles.foldout).x };
+				FoldoutStyle = new (EditorStyles.foldout);
 				SelectableLabelStyle = new (GUI.skin.textField);
 			}
 			EditorGUILayout.BeginHorizontal ();
@@ -204,10 +215,10 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 
 		IEnumerable<AnimatorController> GetControllers () {
 #if VRC_SDK_VRCSDK3
-			return VRCAvatarDescriptor == null ? Enumerable.Empty<AnimatorController> () : VRCAvatarDescriptor.baseAnimationLayers
+			return VRCAvatarDescriptor ? VRCAvatarDescriptor.baseAnimationLayers
 				.Concat (VRCAvatarDescriptor.specialAnimationLayers)
 				.Select (static x => x.animatorController as AnimatorController)
-				.Where (static x => x != null);
+				.Where (static x => x).ToArray () : Enumerable.Empty<AnimatorController> ();
 #else
 			return Animator?.runtimeAnimatorController is not AnimatorController controller
 				? Enumerable.Empty<AnimatorController> () : new AnimatorController[] { controller };

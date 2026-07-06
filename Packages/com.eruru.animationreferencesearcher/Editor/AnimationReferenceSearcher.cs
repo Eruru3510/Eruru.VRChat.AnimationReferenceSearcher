@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 using VRC.SDK3.Avatars.Components;
 #endif
 
-namespace Eruru.VRChat.AnimationReferenceSearcher {
+namespace Eruru.AnimationReferenceSearcher {
 
 	public class AnimationReferenceSearcher : EditorWindow {
 
@@ -98,6 +98,7 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 
 		void OnDestroy () {
 			EditorSceneManager.activeSceneChangedInEditMode -= EditorSceneManager_ActiveSceneChangedInEditMode;
+			Clear ();
 		}
 
 		void OnGUI () {
@@ -211,6 +212,9 @@ namespace Eruru.VRChat.AnimationReferenceSearcher {
 		void Clear () {
 			PathResults.Clear ();
 			PathNodes.Clear ();
+			CurrentController = null;
+			CurrentLayer = null;
+			CurrentClips = null;
 		}
 
 		IEnumerable<AnimatorController> GetControllers () {
